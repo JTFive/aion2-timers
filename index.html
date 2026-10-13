@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Live AION 2 Spacetime Rift timer, rift spawn locations with nearest teleports, and daily/weekly reset countdowns for every server region, shown in your own time zone.">
+<meta property="og:title" content="AION 2 Rift Timers">
+<meta property="og:description" content="Live Spacetime Rift, reset and Rift Contest countdowns for all AION 2 server regions.">
+<meta property="og:type" content="website">
+<meta name="google-site-verification" content="PPyz2G9xQNDw7XcgmA1efSsvQmeIFnNtPXIRoRdNQAU" />
+<link rel="canonical" href="https://aion2timers.netlify.app/">
+<meta property="og:url" content="https://aion2timers.netlify.app/">
+<title>AION 2 Rift Timers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: settings bar (server + location), timer cards, then the next 24h of rift openings */
+:root{
+  --bg:#eef0f6; --surface:#ffffff; --line:#d5d9e6; --fg:#171b2e; --muted:#5d6480;
+  --accent:#2a6fdb; --aether:#0e9f9a; --warn:#c77a0a; --open:#d9365b;
+  --display:"Marcellus",Georgia,serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1020; --surface:#151a30; --line:#28304f; --fg:#e7eaf6; --muted:#9aa2c2;
+  --accent:#6ea0ff; --aether:#3fd6cf; --warn:#f0b04a; --open:#ff6f8e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1020; --surface:#151a30; --line:#28304f; --fg:#e7eaf6; --muted:#9aa2c2;
+  --accent:#6ea0ff; --aether:#3fd6cf; --warn:#f0b04a; --open:#ff6f8e; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 48px;display:grid;gap:26px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+h1{font-family:var(--display);font-weight:400;font-size:2rem;margin:0;letter-spacing:.02em;text-wrap:balance}
+.sub{color:var(--muted);font-size:.9rem}
+.clock{font-family:var(--mono);font-size:1.1rem;font-variant-numeric:tabular-nums;text-align:right}
+.clock small{display:block;font-family:var(--body);color:var(--muted);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase}
+.settings{display:flex;flex-wrap:wrap;gap:12px}
+.settings label{display:grid;gap:4px;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex:1 1 220px;min-width:0}
+select{font:500 .95rem var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;letter-spacing:0;text-transform:none;width:100%}
+select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+h2{font-family:var(--display);font-weight:400;font-size:1.25rem;margin:0 0 10px}
+.timers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.timer{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:4px;align-content:start;min-width:0}
+.timer .lbl{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.timer .cd{font-family:var(--mono);font-weight:700;font-size:1.7rem;font-variant-numeric:tabular-nums}
+.timer .cd.na{font-size:1.1rem;color:var(--muted);font-weight:500}
+.timer .at{font-size:.85rem;color:var(--muted)}
+.timer.rift .cd{color:var(--aether)}
+.timer.live{border-color:var(--open)}
+.timer.live .cd{color:var(--open)}
+.pill{justify-self:start;font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;border:1px solid currentColor}
+.pill.open{color:var(--open)} .pill.unconf{color:var(--warn)}
+.sched{display:flex;flex-wrap:wrap;gap:6px}
+.sched b{font-family:var(--mono);font-weight:500;font-size:.85rem;padding:4px 9px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+.sched b.next{color:var(--aether);border-color:var(--aether)}
+.sched b.live{color:var(--open);border-color:var(--open)}
+.sched b small{font-family:var(--body);font-size:.7rem;opacity:.8}
+#spawns .intro{margin:0 0 14px;max-width:72ch;color:var(--fg)}
+#spawns .fine{margin:10px 0 0;font-size:.8rem;color:var(--muted);max-width:72ch}
+.fac{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.facbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.facbox h3{font-family:var(--display);font-weight:400;font-size:1.05rem;margin:0 0 8px;color:var(--aether)}
+.tblwrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{text-align:left;font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500;padding:4px 8px 6px 0;border-bottom:1px solid var(--line)}
+td{padding:6px 8px 6px 0;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td[rowspan]{font-weight:600}
+.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:400px){.fac{grid-template-columns:1fr}}
+.hdr-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.donate{font:600 .85rem var(--body);color:var(--surface);background:var(--accent);padding:8px 14px;border-radius:8px;text-decoration:none}
+.donate:hover{filter:brightness(1.1)}
+.donate:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+footer{font-size:.8rem;color:var(--muted);display:grid;gap:6px;max-width:72ch}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>AION 2 Timers</h1>
+      <div class="sub" id="subline"></div>
+    </div>
+    <div class="hdr-right">
+      <div class="clock"><small id="nowlbl">Your time</small><span id="now">--:--:--</span></div>
+      <a class="donate" id="donate" href="#" target="_blank" rel="noopener">Support this site</a>
+    </div>
+  </header>
+
+  <div class="settings">
+    <label for="srv">Server region
+      <select id="srv"></select>
+    </label>
+    <label for="tz">Show times in
+      <select id="tz"></select>
+    </label>
+  </div>
+
+  <section>
+    <h2>Up next</h2>
+    <div class="timers">
+      <div class="timer rift" id="t-rift">
+        <span class="lbl">Spacetime Rift</span>
+        <span class="cd" id="rift-cd">--:--:--</span>
+        <span class="at" id="rift-at"></span>
+      </div>
+      <div class="timer" id="t-daily">
+        <span class="lbl">Daily reset</span>
+        <span class="cd" id="daily-cd">--</span>
+        <span class="at" id="daily-at"></span>
+      </div>
+      <div class="timer" id="t-weekly">
+        <span class="lbl">Weekly reset</span>
+        <span class="cd" id="weekly-cd">--</span>
+        <span class="at" id="weekly-at"></span>
+      </div>
+      <div class="timer" id="t-contest">
+        <span class="lbl">Rift Contest</span>
+        <span class="cd" id="contest-cd">--</span>
+        <span class="at" id="contest-at"></span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Rift openings, next 24 hours</h2>
+    <div class="sched" id="sched"></div>
+  </section>
+
+  <section id="spawns">
+    <h2>Where rifts spawn</h2>
+    <p class="intro">Each opening, the portal appears at one of a fixed set of spots, and which spot is picked changes every time. When the chat notice appears, open your world map, zoom into the highlighted region and look for the purple portal icon. Wait near a teleport point by the clusters below so you can reach it inside the 10-minute window.</p>
+    <div class="fac">
+      <div class="facbox">
+        <h3>Elyos lands</h3>
+        <div class="tblwrap"><table>
+          <thead><tr><th>Region</th><th>Spawn area</th><th>Nearest teleport</th><th class="n">Walk</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="3">Verteron</td><td>Destroyed Abyss Gate</td><td>Verteron Fortress Valley</td><td class="n">30 m</td></tr>
+            <tr><td>Aullaeu Village</td><td>Abandoned Wind Breeze Office</td><td class="n">120 m</td></tr>
+            <tr><td>Southern Altamia Highland</td><td>Highland's End Campsite</td><td class="n">220 m</td></tr>
+            <tr><td rowspan="2">Eltnen</td><td>Eiron Hill</td><td>Silent Remnants</td><td class="n">160 m</td></tr>
+            <tr><td>Fractured Land</td><td>Ruined Laboratory</td><td class="n">190 m</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="facbox">
+        <h3>Asmodian lands</h3>
+        <div class="tblwrap"><table>
+          <thead><tr><th>Region</th><th>Spawn area</th><th>Nearest teleport</th><th class="n">Walk</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="3">Altgard</td><td>Moslan Forest</td><td>Moslan Forest Dry Shade</td><td class="n">130 m</td></tr>
+            <tr><td>Purifying Forest</td><td>Guide Rest Stop</td><td class="n">130 m</td></tr>
+            <tr><td>Legion Base Ruins</td><td>Graverobber Campsite</td><td class="n">220 m</td></tr>
+            <tr><td rowspan="2">Morheim</td><td>Nephra Snowfield</td><td>Frostwind Forward Base</td><td class="n">220 m</td></tr>
+            <tr><td>Iralcig Highland</td><td>Iralcig Outpost</td><td class="n">340 m</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <p class="fine">Each area has about five possible spawn spots. Requires level 45. Spawn points can change with patches; this list follows community mapping as of October 2026.</p>
+  </section>
+
+  <footer id="notes"></footer>
+<footer class="legal" style="font-size:.75rem;color:var(--muted);max-width:72ch">
+  Fan-made tool. Not affiliated with or endorsed by NCSOFT. AION is a trademark of NCSOFT Corporation.
+  Find this useful? <a href="https://ko-fi.com/jtfive" target="_blank" rel="noopener" style="color:var(--accent)">Buy me a coffee on Ko-fi</a>.
+</footer>
+</div>
+
+<script>
+const H=3600e3, D=24*H, M=60e3;
+// riftMod: rifts open when (UTC hour) % 3 === riftMod. resetUTC: daily reset hour in UTC (null = unconfirmed).
+// contest: [weekday list in server time, server-time hours, server UTC offset] or null.
+const SERVERS={
+  asia:  {name:'Global · Asia (Azphel, Ariel, Siel, Israphel…)',short:'Global · Asia',riftMod:0,resetUTC:7,contest:null},
+  nae:   {name:'Global · NA East',short:'Global · NA East',riftMod:0,resetUTC:7,contest:null},
+  naw:   {name:'Global · NA West',short:'Global · NA West',riftMod:0,resetUTC:7,contest:null},
+  eu:    {name:'Global · Europe',short:'Global · Europe',riftMod:0,resetUTC:7,contest:null},
+  latam: {name:'Global · Latin America',short:'Global · Latin America',riftMod:0,resetUTC:7,contest:null},
+  tw:    {name:'Taiwan',short:'Taiwan',riftMod:0,resetUTC:null,contest:null},
+  kr:    {name:'Korea',short:'Korea',riftMod:2,resetUTC:null,contest:{days:[1,4,6],hours:[20,23],off:9}},
+};
+const ZONES=[
+ ['auto','This device'],
+ ['Asia/Manila','Philippines (Manila)'],['Asia/Singapore','Singapore / Malaysia'],['Asia/Jakarta','Indonesia (Jakarta)'],
+ ['Asia/Bangkok','Thailand / Vietnam'],['Asia/Taipei','Taiwan'],['Asia/Hong_Kong','Hong Kong'],['Asia/Tokyo','Japan'],
+ ['Asia/Seoul','Korea'],['Asia/Kolkata','India'],['Asia/Dubai','UAE'],['Australia/Perth','Australia (Perth)'],
+ ['Australia/Sydney','Australia (Sydney)'],['Pacific/Auckland','New Zealand'],['Europe/London','UK'],
+ ['Europe/Paris','Central Europe'],['Europe/Istanbul','Turkey'],['America/New_York','US East'],['America/Chicago','US Central'],
+ ['America/Denver','US Mountain'],['America/Los_Angeles','US West'],['America/Sao_Paulo','Brazil'],['America/Mexico_City','Mexico'],
+ ['UTC','UTC'],
+];
+
+const store={get(k,d){try{return localStorage.getItem('aion2-timers-'+k)||d}catch(e){return d}},set(k,v){try{localStorage.setItem('aion2-timers-'+k,v)}catch(e){}}};
+const srvSel=document.getElementById('srv'), tzSel=document.getElementById('tz');
+for(const [k,s] of Object.entries(SERVERS))srvSel.add(new Option(s.name,k));
+for(const [z,n] of ZONES)tzSel.add(new Option(n,z));
+// ▼ Put your Ko-fi / Buy Me a Coffee / PayPal.me link here. The button hides itself until you do.
+const DONATE_URL='https://ko-fi.com/jtfive';
+const dEl=document.getElementById('donate'); if(DONATE_URL)dEl.href=DONATE_URL; else dEl.hidden=true;
+
+// First visit: guess the visitor's region from their device time zone.
+function guessServer(){const z=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+  if(z==='Asia/Seoul')return 'kr'; if(z==='Asia/Taipei')return 'tw';
+  if(/^Europe\/|^Africa\/|^Atlantic\/|^Asia\/(Dubai|Riyadh|Qatar|Kuwait|Bahrain|Muscat|Tehran|Baghdad|Jerusalem|Beirut|Amman)$/.test(z))return 'eu';
+  if(/^America\/(Sao_Paulo|Argentina|Buenos_Aires|Santiago|Bogota|Lima|Caracas|Mexico_City|Monterrey|Guatemala|Montevideo|Asuncion|La_Paz|Guayaquil|Panama|Costa_Rica|El_Salvador|Tegucigalpa|Managua)/.test(z))return 'latam';
+  if(/^America\/(Los_Angeles|Vancouver|Phoenix|Denver|Edmonton|Boise|Anchorage)|^Pacific\/Honolulu/.test(z))return 'naw';
+  if(/^America\//.test(z))return 'nae';
+  return 'asia'}
+srvSel.value=store.get('srv',guessServer()); if(!SERVERS[srvSel.value])srvSel.value='asia';
+tzSel.value=store.get('tz','auto'); if(tzSel.selectedIndex<0)tzSel.value='auto';
+srvSel.onchange=()=>{store.set('srv',srvSel.value);tick()};
+tzSel.onchange=()=>{store.set('tz',tzSel.value);tick()};
+
+const tz=()=>tzSel.value==='auto'?Intl.DateTimeFormat().resolvedOptions().timeZone:tzSel.value;
+const fT=t=>new Date(t).toLocaleTimeString('en-GB',{timeZone:tz(),hour:'2-digit',minute:'2-digit'});
+const fDT=t=>new Date(t).toLocaleString('en-GB',{timeZone:tz(),weekday:'short',hour:'2-digit',minute:'2-digit'});
+const fWd=t=>new Date(t).toLocaleDateString('en-GB',{timeZone:tz(),weekday:'short'});
+function hms(ms){ms=Math.max(0,ms);const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`}
+function dhm(ms){ms=Math.max(0,ms);const d=Math.floor(ms/D),h=Math.floor(ms%D/H),m=Math.floor(ms%H/M);return d?`${d}d ${h}h ${m}m`:hms(ms)}
+
+function lastRift(t,mod){const base=Math.floor((t-mod*H)/(3*H))*3*H+mod*H;return base>t?base-3*H:base}
+function lastDaily(t,rh){const d=new Date(t);let b=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),rh);if(b>t)b-=D;return b}
+function lastWeekly(t,rh){let b=lastDaily(t,rh);while(new Date(b).getUTCDay()!==3)b-=D;return b}
+function nextContest(t,c){for(let i=-1;i<9;i++){const sd=new Date(t+c.off*H+i*D);const y=sd.getUTCFullYear(),mo=sd.getUTCMonth(),da=sd.getUTCDate(),wd=sd.getUTCDay();
+  if(!c.days.includes(wd))continue;for(const hr of c.hours){const start=Date.UTC(y,mo,da,hr)-c.off*H;if(start+10*M>t)return start}}return null}
+
+function setCard(id,cd,at,{na=false,live=false}={}){const cdEl=document.getElementById(id+'-cd');cdEl.textContent=cd;cdEl.classList.toggle('na',na);
+  document.getElementById(id+'-at').innerHTML=at;document.getElementById('t-'+id).classList.toggle('live',live)}
+
+function tick(){
+  const now=Date.now(), s=SERVERS[srvSel.value];
+  document.getElementById('now').textContent=new Date(now).toLocaleTimeString('en-GB',{timeZone:tz()});
+  document.getElementById('nowlbl').textContent=tzSel.options[tzSel.selectedIndex].text;
+  document.getElementById('subline').textContent=`${s.short} · times in ${tz().replace('_',' ')}`;
+
+  const lr=lastRift(now,s.riftMod), closes=lr+10*M, nr=lr+3*H;
+  if(now<closes)setCard('rift',hms(closes-now),`<span class="pill open">Open now</span> Portal closes ${fT(closes)}`,{live:true});
+  else setCard('rift',hms(nr-now),`Next opens ${fT(nr)} · 10 min to enter`);
+
+  if(s.resetUTC!=null){
+    const nd=lastDaily(now,s.resetUTC)+D, nw=lastWeekly(now,s.resetUTC)+7*D;
+    setCard('daily',hms(nd-now),fDT(nd)); setCard('weekly',dhm(nw-now),fDT(nw));
+  }else{
+    setCard('daily','Not confirmed','Check the in-game "Daily recharge in" tooltip',{na:true});
+    setCard('weekly','Not confirmed','Wednesday · check the in-game "Weekly recharge in" tooltip',{na:true});
+  }
+
+  if(s.contest){const c=nextContest(now,s.contest);const live=c!=null&&now>=c;
+    setCard('contest',live?'Open':dhm(c-now),(live?'Joining closes ':'Next ')+fDT(live?c+10*M:c)+' · Mon / Thu / Sat',{live});
+  }else setCard('contest','Not on this server yet','Announced for Korea only so far',{na:true});
+
+  const sc=document.getElementById('sched');sc.innerHTML='';
+  for(let k=0;k<8;k++){const t=(now<closes?lr:nr)+k*3*H;const b=document.createElement('b');
+    b.innerHTML=`${fT(t)} <small>${fWd(t)}</small>`;if(k===0)b.className=now<closes?'live':'next';sc.appendChild(b)}
+
+  document.getElementById('notes').innerHTML=s.resetUTC!=null
+    ?`<span>Global servers reset daily at 07:00 UTC, and weekly on Wednesday at the same time. Rift openings follow the community-observed 3-hour cycle; NCSOFT hasn't published an official schedule.</span><span>If anything here disagrees with the in-game timers, trust the game.</span>`
+    :`<span>Rift times for ${s.short} come from community timers based on server time. Reset times for this region aren't confirmed here, so check the in-game tooltip.</span>`;
+}
+tick();setInterval(tick,1000);
+</script>
+
+</body>
+</html>
