@@ -176,7 +176,7 @@ const H=3600e3, D=24*H, M=60e3;
 // riftMod: rifts open when (UTC hour) % 3 === riftMod. resetUTC: daily reset hour in UTC (null = unconfirmed).
 // contest: [weekday list in server time, server-time hours, server UTC offset] or null.
 const SERVERS={
-  asia:  {name:'Global · Asia (Azphel, Ariel, Siel, Israphel…)',short:'Global · Asia',riftMod:0,resetUTC:7,contest:null},
+  asia:  {name:'Global · Asia (Azphel, Ariel, Siel, Israphel…)',short:'Global · Asia',riftMod:2,resetUTC:7,contest:null},
   nae:   {name:'Global · NA East',short:'Global · NA East',riftMod:0,resetUTC:7,contest:null},
   naw:   {name:'Global · NA West',short:'Global · NA West',riftMod:0,resetUTC:7,contest:null},
   eu:    {name:'Global · Europe',short:'Global · Europe',riftMod:0,resetUTC:7,contest:null},
@@ -259,7 +259,7 @@ function tick(){
     b.innerHTML=`${fT(t)} <small>${fWd(t)}</small>`;if(k===0)b.className=now<closes?'live':'next';sc.appendChild(b)}
 
   document.getElementById('notes').innerHTML=s.resetUTC!=null
-    ?`<span>Global servers reset daily at 07:00 UTC, and weekly on Wednesday at the same time. Rift openings follow the community-observed 3-hour cycle; NCSOFT hasn't published an official schedule.</span><span>If anything here disagrees with the in-game timers, trust the game.</span>`
+    ?`<span>Global servers reset daily at 07:00 UTC, and weekly on Wednesday at the same time. Rift openings follow a 3-hour cycle observed by players; NCSOFT hasn't published an official schedule. Asia rifts are confirmed in-game at 01:00, 04:00, 07:00 … Manila time.</span><span>If anything here disagrees with the in-game timers, trust the game.</span>`
     :`<span>Rift times for ${s.short} come from community timers based on server time. Reset times for this region aren't confirmed here, so check the in-game tooltip.</span>`;
 }
 tick();setInterval(tick,1000);
